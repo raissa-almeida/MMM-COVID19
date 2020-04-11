@@ -10,6 +10,10 @@
   font-size: 20px;
 }
 
+.covid td {
+  padding-right: 10px;
+}
+
 .covid td.number {
   text-align: right;
 }
