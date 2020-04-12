@@ -47,6 +47,7 @@ module.exports = NodeHelper.create({
     request(options, function (error, response, body) {
       if (!error && response.statusCode == 200) {
         var result = JSON.parse(body)
+
         self.sendSocketNotification('BYCOUNTRY_RESULT', result)
       }
     })

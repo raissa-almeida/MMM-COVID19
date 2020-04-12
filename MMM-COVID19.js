@@ -107,7 +107,8 @@ Module.register("MMM-COVID19", {
         headerDeathsCell = document.createElement("td"),
         headerNewDeathsCell = document.createElement("td"),
         headerSeriousCell = document.createElement("td"),
-        headerActiveCell = document.createElement("td");
+        headerActiveCell = document.createElement("td"),
+        headerPercentageCell = document.createElement("td");
 
     headerCountryNameCell.innerHTML = ''
     headerConfirmedCell.className = 'number confirmed ' + this.config.headerRowClass
@@ -126,6 +127,8 @@ Module.register("MMM-COVID19", {
     headerRecoveredCell.innerHTML = this.translate('Recovered')
     headerActiveCell.className = 'number active ' + this.config.headerRowClass
     headerActiveCell.innerHTML = this.translate('Active')
+    headerPercentageCell.className = 'number percentage ' + this.config.headerRowClass 
+    headerPercentageCell.innerHTML = this.translate('Percentage')
 
     headerRow.appendChild(headerCountryNameCell)
     headerRow.appendChild(headerConfirmedCell)
@@ -145,6 +148,10 @@ Module.register("MMM-COVID19", {
     headerRow.appendChild(headerRecoveredCell)
     headerRow.appendChild(headerActiveCell)
 
+    if(this.config.worldStats){
+      headerRow.appendChild(headerPercentageCell)
+    }
+
     wrapper.appendChild(headerRow)
     // WorldWide row, activate it via config
     if (this.config.worldStats) {
@@ -158,6 +165,7 @@ Module.register("MMM-COVID19", {
           recoveredCell = document.createElement("td"),
           activeCell = document.createElement("td"),
           casesPerMCell = document.createElement("td"),
+          percentageCell = document.createElement("td"),
           cases = globalStats["total_cases"],
           newCases = globalStats["new_cases"],
           deaths = globalStats["total_deaths"],
@@ -167,7 +175,8 @@ Module.register("MMM-COVID19", {
           casesPerM = this.translate('N/A');
           activeCases = (cases && totalRecovered)?
               this.numberWithCommas(parseInt(cases.replace(/,/g,"")) - parseInt(totalRecovered.replace(/,/g,"")) - parseInt(deaths.replace(/,/g,"")))
-              :"";
+              :"",
+          percentageCases = this.getCountryPercentage(globalStats["total_cases"], globalStats["total_cases"]);
 
       worldNameCell.innerHTML = this.translate('Worldwide')
       worldNameCell.className = this.config.infoRowClass
@@ -192,6 +201,8 @@ Module.register("MMM-COVID19", {
       recoveredCell.innerHTML = totalRecovered
       activeCell.className = 'number active ' + this.config.infoRowClass
       activeCell.innerHTML = activeCases
+      percentageCell.className = 'number percentage' + this.config.infoRowClass
+      percentageCell.innerHTML = percentageCases
 
       worldRow.appendChild(worldNameCell)
       worldRow.appendChild(confirmedCell)
@@ -211,6 +222,8 @@ Module.register("MMM-COVID19", {
       worldRow.appendChild(recoveredCell)
       worldRow.appendChild(activeCell)
 
+      worldRow.appendChild(percentageCell)
+
       wrapper.appendChild(worldRow)
     }
     // countries row, one per country listed at config => countries
@@ -227,6 +240,7 @@ Module.register("MMM-COVID19", {
             seriousCell = document.createElement("td"),
             recoveredCell = document.createElement("td"),
             activeCell = document.createElement("td"),
+            percentageCell = document.createElement("td"),
             countryName = value["country_name"],
             cases = value["cases"],
             deaths = value["deaths"],
@@ -235,7 +249,8 @@ Module.register("MMM-COVID19", {
             newDeaths = value["new_deaths"],
             totalRecovered = value["total_recovered"],
             activeCases = value["active_cases"],
-            casesPerM = value["total_cases_per_1m_population"];
+            casesPerM = value["total_cases_per_1m_population"],
+            percentageValue = this.getCountryPercentage(value["cases"], globalStats["total_cases"]);
 
         countryNameCell.innerHTML = this.translate(countryName)
         countryNameCell.className = this.config.infoRowClass
@@ -262,6 +277,8 @@ Module.register("MMM-COVID19", {
         recoveredCell.innerHTML = totalRecovered
         activeCell.className = 'number active ' + this.config.infoRowClass
         activeCell.innerHTML = activeCases
+        percentageCell.className = 'number percentage ' + this.config.infoRowClass
+        percentageCell.innerHTML =  percentageValue
 
         countryRow.appendChild(countryNameCell)
         countryRow.appendChild(confirmedCell)
@@ -278,8 +295,13 @@ Module.register("MMM-COVID19", {
         if (this.config.showExtraInfo) {
           countryRow.appendChild(seriousCell)
         }
+
         countryRow.appendChild(recoveredCell)
         countryRow.appendChild(activeCell)
+
+        if(this.config.worldStats){
+          countryRow.appendChild(percentageCell)
+        }
 
         wrapper.appendChild(countryRow)
       }
@@ -292,11 +314,11 @@ Module.register("MMM-COVID19", {
 
       statsDateCell.innerHTML = this.translate('statistic taken at ') + moment(dateToLocalTimezone).format(this.config.timeFormat) 
       if (this.config.delta && this.config.showExtraInfo) {
-	      statsDateCell.colSpan = "9"
+	      statsDateCell.colSpan = "11"
       } else if (this.config.delta || this.config.showExtraInfo) {
-	      statsDateCell.colSpan = "7" 
+	      statsDateCell.colSpan = "9" 
       } else {
-	      statsDateCell.colSpan = "5"
+	      statsDateCell.colSpan = "7"
       }
       statsDateCell.className = 'last-update'
 
@@ -334,6 +356,12 @@ Module.register("MMM-COVID19", {
       );
     }
   },  
+  getCountryPercentage: function(countryCases, worldCases){
+    var countryCasesFormatted = countryCases.replace(/,/g,'');
+    var worldCasesFormatted = worldCases.replace(/,/g,'');
+    var result = ((parseInt(countryCasesFormatted) / parseInt(worldCasesFormatted)) * 100).toFixed(2);
+    return `${result}%`;
+  },
   // insert separating commas into a number at thousands, millions, etc
   numberWithCommas: function(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
